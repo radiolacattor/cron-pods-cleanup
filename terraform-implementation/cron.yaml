@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pods-cleanup
+  namespace: default default #change to the proper one (should exist or be created before)
+spec:
+  schedule: "20 * * * *" #every 20 minute of an hour
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: pods-cleanup
+          containers:
+          - name: pods-cleanup
+            image: bitnami/kubectl
+            imagePullPolicy: IfNotPresent
+            command: ["/bin/sh","-c"]
+            args: ["kubectl delete pods --field-selector status.phase=Failed --all-namespaces; kubectl delete pods --field-selector status.phase=Succeeded --all-namespaces"]
+          restartPolicy: OnFailure
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pods-cleanup
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "delete", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cleanup-pods
+subjects:
+- kind: ServiceAccount
+  name: pods-cleanup
+  namespace: default #change to the proper one (should exist or be created before)
+roleRef:
+  kind: ClusterRole
+  name: pods-cleanup
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: default #change to the proper one (should exist or be created before)
+  name: pods-cleanup
