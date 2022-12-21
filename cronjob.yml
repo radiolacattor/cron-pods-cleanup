@@ -13,8 +13,6 @@ spec:
           - name: pods-cleanup
             image: bitnami/kubectl
             imagePullPolicy: IfNotPresent
-            command:
-            - /bin/sh
-            - -c
-            - kubectl delete pods --field-selector status.phase=Failed --field-selector status.phase=Succeeded --all-namespaces 
+            command: ["/bin/sh","-c"]
+            args: ["kubectl delete pods --field-selector status.phase=Failed --all-namespaces; kubectl delete pods --field-selector status.phase=Succeeded --all-namespaces"]
           restartPolicy: OnFailure
