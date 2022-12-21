@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pods-cleanup
+spec:
+  schedule: "20 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: pods-cleanup
+          containers:
+          - name: pods-cleanup
+            image: bitnami/kubectl
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - kubectl delete pods --field-selector status.phase=Failed --field-selector status.phase=Succeeded --all-namespaces 
+          restartPolicy: OnFailure
